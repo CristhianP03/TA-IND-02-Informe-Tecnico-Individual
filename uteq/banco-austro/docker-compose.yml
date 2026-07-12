@@ -1,0 +1,44 @@
+services:
+  postgres-cuenca:
+    image: postgres:16
+    container_name: banco-cuenca
+    environment:
+      POSTGRES_DB: banco_austro
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./sql-cuenca:/docker-entrypoint-initdb.d
+      - pgdata-cuenca:/var/lib/postgresql/data
+
+  postgres-quito:
+    image: postgres:16
+    container_name: banco-quito
+    environment:
+      POSTGRES_DB: banco_austro
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./sql-quito:/docker-entrypoint-initdb.d
+      - pgdata-quito:/var/lib/postgresql/data
+
+  postgres-guayaquil:
+    image: postgres:16
+    container_name: banco-guayaquil
+    environment:
+      POSTGRES_DB: banco_austro
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./sql-guayaquil:/docker-entrypoint-initdb.d
+      - pgdata-guayaquil:/var/lib/postgresql/data
+
+volumes:
+  pgdata-cuenca:
+  pgdata-quito:
+  pgdata-guayaquil:
