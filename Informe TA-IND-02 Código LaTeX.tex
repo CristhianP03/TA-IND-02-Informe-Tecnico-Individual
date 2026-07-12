@@ -150,6 +150,9 @@
 
 \pagestyle{fancy}
 
+\tableofcontents
+\clearpage
+
 \section*{Resumen}
 \addcontentsline{toc}{section}{Resumen}
 El presente informe analiza el modelo de consistencia y la estrategia de replicación implementados en el Sistema de Gestión de Solicitudes de Soporte Técnico de Internet, desarrollado por el equipo ACC. A partir de la arquitectura de microservicios documentada, se identifica que la sincronización entre \texttt{ticket-service} y \texttt{report-service}, mediante el patrón CQRS y el bus de eventos Apache Kafka, constituye el objeto central de análisis en términos de replicación y consistencia. Se caracteriza dicho modelo como de consistencia eventual y se clasifica bajo el marco PACELC como PA/EL, priorizando disponibilidad ante particiones y latencia en operación normal. Se contrasta el modelo actual con dos alternativas --consulta síncrona directa y replicación multi-líder por quorum-- mediante criterios técnicos explícitos. La discusión crítica concluye que el modelo es adecuado para la ruta operativa del cliente, pero presenta una limitación real en el subdominio de reportes de cumplimiento de SLA, para la cual se proponen mitigaciones concretas.
