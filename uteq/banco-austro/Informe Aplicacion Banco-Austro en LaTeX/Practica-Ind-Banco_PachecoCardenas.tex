@@ -1,0 +1,587 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[spanish, es-nodecimaldot, es-tabla]{babel}
+\usepackage[top=2.25cm, bottom=2cm, left=3cm, right=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{2pt}
+\usepackage{titlesec}
+\titleformat{\section}{\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+\titlespacing{\section}{0pt}{14pt}{6pt}
+\titlespacing{\subsection}{0pt}{10pt}{4pt}
+\titlespacing{\subsubsection}{0pt}{8pt}{3pt}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{caption}
+\captionsetup{font=small, labelfont=bf, skip=6pt}
+\usepackage[hidelinks, breaklinks=true]{hyperref}
+\usepackage{url}
+\urlstyle{tt}
+\usepackage{fancyhdr}
+\fancyhf{}
+\fancyhead[L]{Aplicaciones Distribuidas \textperiodcentered{} UTEQ}
+\fancyhead[R]{\small Cristhian Daniel Pacheco Cárdenas}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\setlength{\headheight}{14pt}
+\usepackage[framemethod=default]{mdframed}
+\usepackage{xcolor}
+\definecolor{azulUTEQ}{RGB}{13, 42, 93}
+\definecolor{grisClaro}{RGB}{245, 245, 245}
+\definecolor{azulClaro}{RGB}{232, 240, 254}
+\usepackage{enumitem}
+\setlist[itemize]{noitemsep, topsep=3pt, leftmargin=1.4em}
+\setlist[enumerate]{noitemsep, topsep=3pt, leftmargin=1.6em}
+\usepackage{listings}
+\usepackage{longtable}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{grisClaro},
+  frame=single,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  numbers=none,
+  keywordstyle=\color{azulUTEQ}\bfseries,
+  commentstyle=\color{gray},
+  stringstyle=\color{red!70!black},
+  tabsize=2,
+  xleftmargin=1em,
+  xrightmargin=1em,
+  aboveskip=8pt,
+  belowskip=8pt,
+  captionpos=b,
+  extendedchars=true,
+  literate=%
+    {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+    {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+    {ñ}{{\~n}}1 {Ñ}{{\~N}}1
+}
+
+\begin{document}
+
+% ======================================================================
+% PORTADA
+% ======================================================================
+\begin{titlepage}
+\centering
+\vspace*{0.5cm}
+{\large\bfseries Universidad Técnica Estatal de Quevedo}\\[6pt]
+{\normalsize Facultad de Ciencias de la Computación}\\[4pt]
+{\normalsize Carrera de Ingeniería de Software}
+
+\vspace{1cm}
+\rule{\linewidth}{1pt}\\[10pt]
+{\Large\bfseries
+  Análisis Técnico del Sistema de Gestión Bancaria\\[4pt]
+  con Bases de Datos Distribuidas:\\[4pt]
+  Caso ``Banco del Austro'' \\[4pt]
+  (Múltiples Nodos PostgreSQL \\[4pt]
+  mediante Docker Compose)
+}
+\vspace{2pt}
+\rule{\linewidth}{1pt}
+
+\vspace{1.2cm}
+{\normalsize
+  \textbf{Código:} PRACTICA-IND-BANCO\\[4pt]
+  \textbf{Nombre:} Cristhian Daniel Pacheco Cárdenas\\[4pt]
+  \textbf{Asignatura:} Aplicaciones Distribuidas (ISR-701)\\[4pt]
+  \textbf{Unidad:} 3 -- Bases de Datos Distribuidas\\[4pt]
+  \textbf{Tipo de actividad:} Práctica en clase\\[4pt]
+  \textbf{Período académico:} Regular 2026--2027 SPA\\[4pt]
+  \textbf{Semestre:} Séptimo Semestre\\[4pt]
+  \textbf{Docente:} Gleiston Cicerón Guerrero Ulloa\\[4pt]
+  \textbf{Repositorio del Informe:} \url{https://github.com/CristhianP03/TA-IND-02-Informe-Tecnico-Individual}
+}
+
+\vspace{2.2cm}
+{\small Quevedo, Ecuador \textperiodcentered{} 15 de julio de 2026}
+\end{titlepage}
+
+% ======================================================================
+% ÍNDICE
+% ======================================================================
+\newpage
+\tableofcontents
+\newpage
+
+% ======================================================================
+% 1. INTRODUCCIÓN
+% ======================================================================
+\section{Introducción}
+
+El presente informe técnico documenta el análisis del sistema ``Banco del Austro'', una aplicación distribuida desarrollada en \textbf{Spring Boot 3.4.1} (Java 17) que implementa una arquitectura de \textbf{bases de datos distribuidas} sobre tres instancias independientes de \textbf{PostgreSQL 16}, cada una contenedeurizada mediante \textbf{Docker Compose}.
+
+El sistema simula las operaciones bancarias de una entidad financiera con sucursales en tres ciudades del Ecuador ---Cuenca, Quito y Guayaquil---, donde cada nodo de base de datos almacena la información correspondiente a su región geográfica. La ruta de las consultas se determina a partir del prefijo del número de cuenta bancaria, implementando un esquema de \textit{sharding} por prefijo.
+
+% ======================================================================
+% 2. OBJETIVOS
+% ======================================================================
+\section{Objetivos}
+
+\subsection{Objetivo general}
+Analizar la arquitectura, el diseño y el funcionamiento de un sistema bancario que implementa bases de datos distribuidas mediante múltiples nodos PostgreSQL, evaluando las estrategias de enrutamiento, la integridad de datos y las limitaciones de la transaccionalidad distribuida.
+
+\subsection{Objetivos específicos}
+\begin{itemize}
+  \item Describir la topología de la arquitectura distribuida del sistema.
+  \item Analizar el mecanismo de enrutamiento de consultas basado en prefijos.
+  \item Evaluar la estrategia de configuración de múltiples fuentes de datos en Spring Boot.
+  \item Identificar fortalezas y debilidades del diseño, especialmente en relación con la atomicidad de las transferencias inter-nodo.
+  \item Proponer mejoras para la robustez del sistema.
+\end{itemize}
+
+% ======================================================================
+% 3. MARCO TÉCNICO
+% ======================================================================
+\section{Marco Técnico}
+
+\subsection{Tecnologías utilizadas}
+
+\begin{table}[H]
+\centering
+\caption{Tecnologías del proyecto}
+\begin{tabular}{@{} l l l @{}}
+\toprule
+\textbf{Componente} & \textbf{Tecnología} & \textbf{Versión} \\
+\midrule
+Framework & Spring Boot & 3.4.1 \\
+Lenguaje & Java & 17 \\
+Base de datos & PostgreSQL & 16 \\
+Contenedorización & Docker Compose & -- \\
+Persistencia & Spring JDBC & -- \\
+Construcción & Maven & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Dependencias Maven}
+El archivo \texttt{pom.xml} declara tres dependencias principales:
+\begin{itemize}
+  \item \texttt{spring-boot-starter-web}: proporciona el servidor embebido (Tomcat) y las anotaciones REST (\texttt{@RestController}, \texttt{@GetMapping}, etc.).
+  \item \texttt{spring-boot-starter-jdbc}: ofrece \texttt{JdbcTemplate} para la ejecución de consultas SQL parametrizadas.
+  \item \texttt{postgresql} (runtime): driver JDBC para la comunicación con PostgreSQL.
+\end{itemize}
+
+% ======================================================================
+% 4. ARQUITECTURA DEL SISTEMA
+% ======================================================================
+\section{Arquitectura del Sistema}
+
+\subsection{Vista general}
+
+El sistema está compuesto por cuatro componentes principales:
+
+\begin{enumerate}
+  \item \textbf{Aplicación Spring Boot} (puerto 8080): API REST que recibe las peticiones del cliente.
+  \item \textbf{Nodo Cuenca} (PostgreSQL en puerto 5432): almacena cuentas con prefijo \texttt{22}.
+  \item \textbf{Nodo Quito} (PostgreSQL en puerto 5433): almacena cuentas con prefijo \texttt{17}.
+  \item \textbf{Nodo Guayaquil} (PostgreSQL en puerto 5434): almacena cuentas con prefijo \texttt{09}.
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+\begin{mdframed}[backgroundcolor=grisClaro, linewidth=1pt]
+\begin{verbatim}
+         Cliente (HTTP)
+              |
+              v
+   +----------------------+
+   |   Spring Boot API    |
+   |     (Puerto 8080)    |
+   +----------+-----------+
+              |
+    +---------+---------+
+    |         |         |
+    v         v         v
+ +------+ +------+ +----------+
+ |Cuenca| |Quito | |Guayaquil |
+ | :5432| | :5433| |   :5434  |
+ +------+ +------+ +----------+
+  (22xx)   (17xx)    (09xx)
+\end{verbatim}
+\end{mdframed}
+\caption{Diagrama de arquitectura del sistema.}
+\end{figure}
+
+\subsection{Infraestructura Docker}
+El archivo \texttt{docker-compose.yml} define tres servicios, cada uno basado en la imagen oficial \texttt{postgres:16}:
+
+\begin{table}[H]
+\centering
+\caption{Configuración de contenedores Docker}
+\begin{tabular}{@{} l l l l @{}}
+\toprule
+\textbf{Servicio} & \textbf{Contenedor} & \textbf{Puerto} & \textbf{Prefijo} \\
+\midrule
+postgres-cuenca & banco-cuenca & 5432 & 22 \\
+postgres-quito & banco-quito & 5433 & 17 \\
+postgres-guayaquil & banco-guayaquil & 5434 & 09 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Cada contenedor monta su directorio \texttt{sql-*} como volumen de inicialización (\texttt{/docker-entrypoint-initdb.d}), de modo que al arrancar se ejecutan automáticamente los scripts \texttt{01\_schema.sql} y \texttt{02\_datos.sql}. Se utilizan \textit{volumes} nombrados para la persistencia de datos.
+
+\subsection{Modelo de datos}
+Cada nodo posee un esquema idéntico con tres tablas:
+
+\begin{table}[H]
+\centering
+\caption{Estructura del esquema de base de datos (idéntico en los tres nodos)}
+\begin{tabular}{@{} l p{6.2cm} l @{}}
+\toprule
+\textbf{Tabla} & \textbf{Campos principales} & \textbf{Relaciones} \\
+\midrule
+\texttt{clientes} & \texttt{id} (PK), \texttt{nombre}, \texttt{direccion}, \texttt{telefono} & -- \\
+\texttt{cuentas} & \texttt{numero} (PK), \texttt{cliente\_id}, \texttt{tipo}, \texttt{saldo}, \texttt{sucursal} & FK a \texttt{clientes(id)} \\
+\texttt{transacciones} & \texttt{id} (PK), \texttt{cuenta\_numero}, \texttt{tipo}, \texttt{monto}, \texttt{fecha}, \texttt{descripcion} & FK a \texttt{cuentas(numero)} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Se definen índices en \texttt{cuentas(cliente\_id)} y \texttt{transacciones(cuenta\_numero)} para optimizar las consultas con JOIN.
+
+% ======================================================================
+% 5. CAPA DE CONFIGURACIÓN
+% ======================================================================
+\section{Capa de Configuración}
+
+\subsection{Exclusión de auto-configuración}
+La clase principal \texttt{BancoDelAustroApplication} excluye \texttt{DataSourceAutoConfiguration} y \texttt{DataSourceTransactionManagerAutoConfiguration} para evitar que Spring Boot intente crear un único DataSource automático:
+
+\begin{lstlisting}[language=Java, caption={Clase principal con exclusión de auto-configuración}]
+@SpringBootApplication(exclude = {
+    DataSourceAutoConfiguration.class,
+    DataSourceTransactionManagerAutoConfiguration.class
+})
+public class BancoDelAustroApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(BancoDelAustroApplication.class, args);
+    }
+}
+\end{lstlisting}
+
+\subsection{Configuración de múltiples fuentes de datos}
+La clase \texttt{DataSourceConfig} (\texttt{@Configuration}) define tres beans de tipo \texttt{DataSource} y tres de tipo \texttt{JdbcTemplate}, cada uno anotado con \texttt{@Qualifier} para la inyección diferenciada:
+
+\begin{lstlisting}[language=Java, caption={Configuración de DataSource y JdbcTemplate por nodo}]
+@Configuration
+public class DataSourceConfig {
+
+    @Primary
+    @Bean(name = "cuencaDataSource")
+    @ConfigurationProperties(prefix = "banco.cuenca")
+    public DataSource cuencaDataSource() {
+        return DataSourceBuilder.create().build();
+    }
+
+    @Bean(name = "quitoDataSource")
+    @ConfigurationProperties(prefix = "banco.quito")
+    public DataSource quitoDataSource() {
+        return DataSourceBuilder.create().build();
+    }
+
+    @Bean(name = "guayaquilDataSource")
+    @ConfigurationProperties(prefix = "banco.guayaquil")
+    public DataSource guayaquilDataSource() {
+        return DataSourceBuilder.create().build();
+    }
+
+    // JdbcTemplate beans análogos para cada DataSource...
+}
+\end{lstlisting}
+
+Los prefijos de configuración (\texttt{banco.cuenca}, \texttt{banco.quito}, \texttt{banco.guayaquil}) se mapean desde \texttt{application.properties}:
+
+\begin{lstlisting}[caption={Propiedades de conexión}]
+server.port=8080
+banco.cuenca.jdbc-url=jdbc:postgresql://localhost:5432/banco_austro
+banco.cuenca.username=admin
+banco.cuenca.password=admin123
+banco.quito.jdbc-url=jdbc:postgresql://localhost:5433/banco_austro
+banco.quito.username=admin
+banco.quito.password=admin123
+banco.guayaquil.jdbc-url=jdbc:postgresql://localhost:5434/banco_austro
+banco.guayaquil.username=admin
+banco.guayaquil.password=admin123
+\end{lstlisting}
+
+% ======================================================================
+% 6. LÓGICA DE ENRUTAMIENTO DISTRIBUIDO
+% ======================================================================
+\section{Lógica de Enrutamiento Distribuido}
+
+\subsection{Mecanismo de enrutamiento por prefijo}
+El método central \texttt{determinarOrigen()} en \texttt{ConsultaDistribuidaService} implementa la lógica de enrutamiento:
+
+\begin{lstlisting}[language=Java, caption={Método de enrutamiento por prefijo de cuenta}]
+private JdbcTemplate determinarOrigen(String numeroCuenta) {
+    if (numeroCuenta == null || numeroCuenta.isBlank()) {
+        throw new IllegalArgumentException("Numero de cuenta invalido");
+    }
+    if (numeroCuenta.startsWith("22")) {
+        return cuencaJdbc;
+    } else if (numeroCuenta.startsWith("17")) {
+        return quitoJdbc;
+    } else if (numeroCuenta.startsWith("09")) {
+        return guayaquilJdbc;
+    } else {
+        throw new IllegalArgumentException(
+            "Numero de cuenta no reconocido: " + numeroCuenta);
+    }
+}
+\end{lstlisting}
+
+Este esquema constituye una forma simplificada de \textbf{sharding horizontal}: los datos se distribuyen según una clave de partición (el prefijo del número de cuenta), y cada fragmento reside en un nodo independiente.
+
+\subsection{Operaciones distribuidas}
+
+\subsubsection{Consulta de saldo}
+El método \texttt{consultarSaldo()} enruta la consulta al nodo correspondiente y ejecuta un \texttt{JOIN} entre \texttt{cuentas} y \texttt{clientes} para retornar el nombre del titular:
+
+\begin{lstlisting}[language=Java, caption={Consulta de saldo con JOIN}]
+public Cuenta consultarSaldo(String numeroCuenta) {
+    JdbcTemplate jdbc = determinarOrigen(numeroCuenta);
+    String sql = """
+        SELECT c.numero, c.cliente_id, cl.nombre,
+               c.tipo, c.saldo, c.sucursal
+        FROM cuentas c
+        JOIN clientes cl ON c.cliente_id = cl.id
+        WHERE c.numero = ?
+        """;
+    // ... RowMapper y retorno
+}
+\end{lstlisting}
+
+\subsubsection{Listado de clientes (federado)}
+El método \texttt{listarTodosLosClientes()} consulta los tres nodos de forma secuencial y agrega los resultados en una lista única, con tolerancia a fallos parciales:
+
+\begin{lstlisting}[language=Java, caption={Consulta federada con tolerancia a fallos}]
+public List<Cliente> listarTodosLosClientes() {
+    List<Cliente> todos = new ArrayList<>();
+    try { todos.addAll(consultarClientes(cuencaJdbc, "Cuenca"));
+    } catch (Exception e) { /* nodo no disponible */ }
+    try { todos.addAll(consultarClientes(quitoJdbc, "Quito"));
+    } catch (Exception e) { /* nodo no disponible */ }
+    try { todos.addAll(consultarClientes(guayaquilJdbc, "Guayaquil"));
+    } catch (Exception e) { /* nodo no disponible */ }
+    return todos;
+}
+\end{lstlisting}
+
+\subsubsection{Transferencia inter-nodo}
+La transferencia entre cuentas de diferentes nodos ejecuta cuatro operaciones SQL independientes: verificación de saldo, descuento en origen, abono en destino e inserción de registros de transacción.
+
+% ======================================================================
+% 7. ENDPOINTS DE LA API REST
+% ======================================================================
+\section{Endpoints de la API REST}
+
+\begin{table}[H]
+\centering
+\caption{Endpoints disponibles en \texttt{/api/banco}}
+\begin{tabular}{@{} l l l @{}}
+\toprule
+\textbf{Método} & \textbf{Ruta} & \textbf{Descripción} \\
+\midrule
+GET & \texttt{/api/banco/saldo/\{numero\}} & Consultar saldo de una cuenta \\
+GET & \texttt{/api/banco/clientes} & Listar todos los clientes (3 nodos) \\
+POST & \texttt{/api/banco/transferencia} & Realizar transferencia entre cuentas \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Los endpoints devuelven respuestas JSON con códigos de estado apropiados: \texttt{200 OK}, \texttt{400 Bad Request}, \texttt{404 Not Found} o \texttt{500 Internal Server Error}.
+
+% ======================================================================
+% 8. ANÁLISIS CRÍTICO
+% ======================================================================
+\section{Análisis Crítico}
+
+\subsection{Fortalezas del diseño}
+\begin{enumerate}
+  \item \textbf{Separación clara de capas:} el código presenta una arquitectura bien organizada en capas: configuración (\texttt{config}), modelo (\texttt{model}), servicio (\texttt{service}) y controlador (\texttt{controller}).
+  \item \textbf{Enrutamiento simple y eficiente:} el mecanismo por prefijo permite identificar el nodo destino en tiempo constante $O(1)$.
+  \item \textbf{Tolerancia a fallos parciales:} la consulta federada de clientes continúa operando si uno o dos nodos están caídos.
+  \item \textbf{Infraestructura reproducible:} Docker Compose permite levantar el entorno completo con un solo comando.
+  \item \textbf{Inicialización automática:} los scripts SQL se ejecutan al crear los contenedores, eliminando la configuración manual.
+\end{enumerate}
+
+\subsection{Debilidades y limitaciones}
+
+\subsubsection{Ausencia de transacciones distribuidas (no ACID)}
+La limitación más significativa es la \textbf{falta de un coordinador de transacciones distribuidas}. El método \texttt{transferir()} ejecuta el descuento en un nodo y el abono en otro como operaciones SQL independientes:
+
+\begin{lstlisting}[language=Java, caption={Operaciones sin transacción distribuida}]
+jdbcOrigen.update(
+    "UPDATE cuentas SET saldo = saldo - ? WHERE numero = ?",
+    monto, cuentaOrigen);
+jdbcDestino.update(
+    "UPDATE cuentas SET saldo = saldo + ? WHERE numero = ?",
+    monto, cuentaDestino);
+\end{lstlisting}
+
+Si la conexión con el nodo destino falla después del descuento en origen, el dinero se \textbf{pierde}: el débito se ejecutó pero el crédito no. No existe mecanismo de compensación (\textit{saga pattern}), ni protocolo de dos fases (\textit{2PC}).
+
+\subsubsection{Condiciones de carrera}
+No se aplican mecanismos de bloqueo (\texttt{SELECT ... FOR UPDATE}) antes de verificar el saldo, por lo que una misma cuenta podría ser debitada simultáneamente por múltiples transferencias en paralelo.
+
+\subsubsection{Manejo de ID de clientes}
+Los IDs de clientes en los tres nodos comienzan en secuencias independientes pero no coordinadas (Cuenca: 1--3, Quito: 4--6, Guayaquil: 7--9). Si se agregan datos después de la inicialización, podrían producirse colisiones de \texttt{SERIAL} entre nodos, lo que comprometería la integridad si se implementara replicación en el futuro.
+
+\subsubsection{Uso de \texttt{double} para saldo}
+El tipo \texttt{double} en Java no garantiza precisión decimal. Debería emplearse \texttt{BigDecimal} y \texttt{NUMERIC} en la capa de persistencia para evitar errores de redondeo en cálculos financieros.
+
+\subsubsection{Sin autenticación ni autorización}
+La API REST no implementa ningún mecanismo de seguridad (Spring Security, JWT, etc.), lo que la deja abierta a accesos no autorizados.
+
+\subsubsection{Sin pruebas unitarias ni de integración}
+El proyecto carece de carpetas \texttt{src/test} y no incluye ningún caso de prueba automatizado.
+
+% ======================================================================
+% 9. MODELO DE CONSISTENCIA
+% ======================================================================
+\section{Modelo de Consistencia y Replicación}
+
+\subsection{Estrategia actual: partición sin replicación}
+El sistema implementa un esquema de \textbf{partición horizontal sin replicación}: cada cuenta reside en exactamente un nodo (\textit{single-writer}). No existe replicación entre nodos; cada base de datos es una fuente de verdad única para sus datos.
+
+\begin{table}[H]
+\centering
+\caption{Comparativa de modelos de consistencia}
+\begin{tabular}{@{} l c c @{}}
+\toprule
+\textbf{Aspecto} & \textbf{Sistema actual} & \textbf{Ideal (producción)} \\
+\midrule
+Replicación & No & Sí (multi-maestro o líder-seguidor) \\
+Consistencia & Eventual (no aplica) & Fuerte o causal \\
+Coordinador transaccional & No & Sí (2PC / Saga) \\
+Alta disponibilidad & Parcial & Sí (con failover) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Análisis de consistencia}
+Al no existir replicación, el sistema obtiene \textbf{consistencia fuerte dentro de cada nodo} (garantizada por PostgreSQL). Sin embargo, la consulta federada (\texttt{listarTodosLosClientes()}) puede reflejar estados momentáneamente inconsistentes si un nodo está caído o con latencia elevada.
+
+En una transferencia inter-nodo, existe una \textbf{ventana de inconsistencia} entre el débito y el crédito, durante la cual el saldo total del sistema no refleja la realidad.
+
+% ======================================================================
+% 10. PROPUESTA DE MEJORA
+% ======================================================================
+\section{Propuesta de Mejoras}
+
+\subsection{Implementar patrón Saga}
+Para garantizar la atomicidad de las transferencias inter-nodo, se recomienda implementar el patrón \textit{Saga} con compensación:
+
+\begin{enumerate}
+  \item Registrar la intención de transferencia en una tabla \texttt{transferencias\_pendientes}.
+  \item Ejecutar el débito en el nodo origen.
+  \item Si el crédito en el nodo destino falla, ejecutar una compensación que revierta el débito.
+  \item Confirmar o cancelar la transferencia de manera definitiva.
+\end{enumerate}
+
+\subsection{Aplicación de bloqueo pesimista}
+Antes de verificar el saldo, ejecutar \texttt{SELECT saldo FROM cuentas WHERE numero = ? FOR UPDATE} dentro de una transacción local para prevenir condiciones de carrera.
+
+\subsection{Uso de \texttt{BigDecimal}}
+Reemplazar \texttt{double} por \texttt{BigDecimal} en la capa de modelo y servicio para garantizar precisión decimal en operaciones financieras.
+
+\subsection{Implementar seguridad}
+Agregar Spring Security con autenticación JWT para proteger los endpoints de la API.
+
+\subsection{Agregar pruebas}
+Crear pruebas unitarias para el servicio de enrutamiento y pruebas de integración con \textit{Testcontainers} para verificar la interacción con los nodos PostgreSQL.
+
+\subsection{Replicación y alta disponibilidad}
+Para un escenario de producción, considerar la replicación streaming de PostgreSQL (\textit{primary-standby}) en cada nodo para tolerancia a fallos.
+
+% ======================================================================
+% 11. DISTRIBUCIÓN DE DATOS
+% ======================================================================
+\section{Distribución de Datos}
+
+\begin{table}[H]
+\centering
+\caption{Resumen de datos por nodo}
+\begin{tabular}{@{} l c c c c @{}}
+\toprule
+\textbf{Nodo} & \textbf{Clientes} & \textbf{Cuentas} & \textbf{Transacciones} & \textbf{Saldo total} \\
+\midrule
+Cuenca (22) & 3 & 4 & 5 & \$17.551,25 \\
+Quito (17) & 3 & 5 & 5 & \$19.600,75 \\
+Guayaquil (09) & 3 & 5 & 5 & \$24.301,50 \\
+\midrule
+\textbf{Total} & \textbf{9} & \textbf{14} & \textbf{15} & \textbf{\$61.453,50} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ======================================================================
+% 12. CONCLUSIONES
+% ======================================================================
+\section{Conclusiones}
+
+\begin{enumerate}
+  \item El sistema ``Banco del Austro'' demuestra satisfactoriamente los conceptos fundamentales de \textbf{bases de datos distribuidas}: partición de datos, enrutamiento por clave, y agregación federada de resultados.
+
+  \item La arquitectura de \textbf{múltiples fuentes de datos} en Spring Boot, combinada con Docker Compose, ofrece una solución elegante y reproducible para el entorno de desarrollo.
+
+  \item El enrutamiento por prefijo de cuenta (\textit{sharding}) es un mecanismo simple pero efectivo para la distribución horizontal de datos en este escenario de negocio.
+
+  \item La principal limitación es la \textbf{ausencia de transacciones distribuidas}, lo que vulnera la atomicidad en operaciones inter-nodo. En un escenario de producción, sería imprescindible implementar un patrón Saga o un protocolo de dos fases.
+
+  \item El proyecto constituye una base sólida para explorar conceptos avanzados como replicación, consistencia eventual, y tolerancia a fallos en bases de datos distribuidas.
+\end{enumerate}
+
+% ======================================================================
+% 13. ESTRUCTURA DEL PROYECTO
+% ======================================================================
+\section{Estructura del Proyecto}
+
+\begin{lstlisting}[caption={Estructura de directorios del proyecto}, language={}, frame=none, numbers=none]
+banco-austro/
+|-- pom.xml
+|-- docker-compose.yml
+|-- .gitignore
+|-- sql-cuenca/
+|   |-- 01_schema.sql
+|   |-- 02_datos.sql
+|-- sql-quito/
+|   |-- 01_schema.sql
+|   |-- 02_datos.sql
+|-- sql-guayaquil/
+|   |-- 01_schema.sql
+|   |-- 02_datos.sql
+|-- src/main/
+    |-- resources/
+    |   |-- application.properties
+    |-- java/com/banco/
+        |-- BancoDelAustroApplication.java
+        |-- config/
+        |   |-- DataSourceConfig.java
+        |-- model/
+        |   |-- Cliente.java
+        |   |-- Cuenta.java
+        |-- controller/
+        |   |-- BancoController.java
+        |-- service/
+            |-- ConsultaDistribuidaService.java
+
+\end{lstlisting}
+
+\section*{Declaración de Uso de Inteligencia Artificial Generativa}
+\addcontentsline{toc}{section}{Declaración de Uso de Inteligencia Artificial Generativa}
+En cumplimiento de las normativas de honestidad académica de la Universidad Técnica Estatal de Quevedo, se declara el uso de la herramienta Gemini (Google) como apoyo en la elaboración del presente informe, específicamente en la verificación de referencias académicas, el formato LaTeX y su mejora en lo que respecta a estructura y redacción. El análisis conceptual, la caracterización del modelo del PFC y las conclusiones son de autoría del estudiante.
+
+\end{document}
